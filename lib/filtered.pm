@@ -3,7 +3,7 @@ use warnings;
 
 package filtered::hook; ## no critic (RequireFilenameMatchesPackage)
 
-our $VERSION = 'v0.0.1'; # VERSION
+our $VERSION = 'v0.0.2'; # VERSION
 
 sub new
 {
@@ -84,7 +84,7 @@ sub filtered::hook::INC
 
 package filtered;
 
-our $VERSION = 'v0.0.1'; # VERSION
+our $VERSION = 'v0.0.2'; # VERSION
 
 use Carp;
 

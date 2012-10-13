@@ -2,7 +2,8 @@
 abstract: 'Apply source filter on external module'
 author:
   - 'Yasutaka ATARASHI <yakex@cpan.org>'
-build_requires: {}
+build_requires:
+  Text::Exception: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -12,4 +13,4 @@ meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: filtered
-version: v0.0.1
+version: v0.0.2

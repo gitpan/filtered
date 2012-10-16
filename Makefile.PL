@@ -12,7 +12,7 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "Apply source filter on external module",
   "AUTHOR" => "Yasutaka ATARASHI <yakex\@cpan.org>",
   "BUILD_REQUIRES" => {
-    "Text::Exception" => 0
+    "Test::Exception" => 0
   },
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -22,7 +22,7 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "filtered",
   "PREREQ_PM" => {},
-  "VERSION" => "v0.0.2",
+  "VERSION" => "v0.0.3",
   "test" => {
     "TESTS" => "t/*.t"
   }

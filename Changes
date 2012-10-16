@@ -1,5 +1,9 @@
 Revision history for filtered
 
+v0.0.3    2012-10-17 01:19:14 Asia/Tokyo
+    * Fix incorrect prereq name.
+    * Add `with' option.
+
 v0.0.2    2012-10-13 13:22:59 Asia/Tokyo
     * Fix missing prereq to Test::Exception.
 

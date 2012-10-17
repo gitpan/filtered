@@ -1,3 +1,4 @@
+Build.PL
 Changes
 LICENSE
 MANIFEST
@@ -5,6 +6,7 @@ META.yml
 Makefile.PL
 README
 dist.ini
+lib/PPI/Transform/PackageName.pm
 lib/filtered.pm
 perlcritic.rc
 t/FilterTest.pm
@@ -14,7 +16,13 @@ t/MyFilter.pm
 t/MyFilter2.pm
 t/MyFilter3.pm
 t/author-critic.t
+t/import.pl
 t/import.t
+t/import_no_ppi.t
+t/import_use_ppi.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t
+t/simple.pl
 t/simple.t
+t/simple_no_ppi.t
+t/simple_use_ppi.t

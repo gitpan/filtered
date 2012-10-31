@@ -26,3 +26,4 @@ t/simple.pl
 t/simple.t
 t/simple_no_ppi.t
 t/simple_use_ppi.t
+weaver.ini

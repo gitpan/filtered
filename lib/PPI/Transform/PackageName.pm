@@ -3,7 +3,8 @@ use warnings;
 
 package PPI::Transform::PackageName;
 
-our $VERSION = 'v0.0.4'; # VERSION
+# ABSTRACT: Subclass of PPI::Transform specific for modifying package names
+our $VERSION = 'v0.0.5'; # VERSION
 
 use base qw(PPI::Transform);
 
@@ -40,12 +41,18 @@ sub document
 }
 
 1;
+
 __END__
+
 =pod
 
 =head1 NAME
 
 PPI::Transform::PackageName - Subclass of PPI::Transform specific for modifying package names
+
+=head1 VERSION
+
+version v0.0.5
 
 =head1 SYNOPSIS
 
@@ -60,27 +67,25 @@ This module is a subclass of PPI::Transform specific for modifying package name.
 
 =head1 OPTIONS
 
-=over 4
-
-=item I<-package_name>
+=head2 I<-package_name>
 
 Specify code reference called for modifying arguments of C<package> statements.
 The code reference is called for each argument.
 Original is passed as $_  and it is expected that $_ is modified.
 
-=item I<-word>
+=head2 I<-word>
 
 Specify code reference called for modifying bare words other than arguments of C<package> statement.
 The code reference is called for each bare word.
 Original is passed as $_  and it is expected that $_ is modified.
 
-=back
-
 =head1 AUTHOR
 
 Yasutaka ATARASHI <yakex@cpan.org>
 
-=head1 LICENSE
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by Yasutaka ATARASHI.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

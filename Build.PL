@@ -19,7 +19,7 @@ my %module_build_args = (
     "Yasutaka ATARASHI <yakex\@cpan.org>"
   ],
   "dist_name" => "filtered",
-  "dist_version" => "v0.0.4",
+  "dist_version" => "v0.0.5",
   "license" => "perl",
   "module_name" => "filtered",
   "recommends" => {

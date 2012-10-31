@@ -1,9 +1,14 @@
 use strict;
 use warnings;
 
+package filtered; # for Pod::Weaver
+
+# ABSTRACT: Apply source filter on external module
+our $VERSION = 'v0.0.5'; # VERSION
+
 package filtered::hook; ## no critic (RequireFilenameMatchesPackage)
 
-our $VERSION = 'v0.0.4'; # VERSION
+our $VERSION = 'v0.0.5'; # VERSION
 
 sub new
 {
@@ -114,7 +119,6 @@ sub filtered::hook::INC
 
 package filtered;
 
-our $VERSION = 'v0.0.4'; # VERSION
 
 use Carp;
 
@@ -155,7 +159,7 @@ sub import
 	$hook{$filter} = filtered::hook->new(FILTER => $filter) if ! exists $hook{$filter};
 	unshift @INC, 	$hook{$filter}->init($target, $as, $with, $ppi);
 	if(!defined eval "require $target") {
-		delete $INC{$hook{$filter}{_FILENAME}}; # For error in internal require
+		delete $INC{$hook{$filter}{_FILENAME}}; # For error in internal require;
 		croak "Can't load $target by $@";
 	}
 	if(defined $as) {
@@ -166,7 +170,7 @@ sub import
 	{
 		no strict 'refs'; ## no critic (ProhibitNoStrict)
 		no warnings 'once';
-		my $import = *{$_[0].'::import'}{CODE};
+		my $import = $_[0]->can('import');
 		if(defined $import) {
 			goto &$import;
 		} elsif ($_[0]->isa('Exporter')) {
@@ -176,12 +180,18 @@ sub import
 }
 
 1;
+
 __END__
+
 =pod
 
 =head1 NAME
 
 filtered - Apply source filter on external module
+
+=head1 VERSION
+
+version v0.0.5
 
 =head1 SYNOPSIS
 
@@ -214,32 +224,30 @@ This module enables you to apply source filter on external module.
 
 =head1 OPTIONS
 
-Rest of the options are passed to C<import> of filtered module.
-
-=over 4
-
-=item C<by>
+=head2 C<by>
 
 Mandatory. Specify a source filter module you want to apply on an external module.
 
-=item C<with>
+=head2 C<with>
 
 Specify arguments passed to source filter.  NOTE that this value is just embedded as a scalar string.
 
-=item C<as>
+=head2 C<as>
 
 Specify the package name for the resultant filtered module.
 This option can be omitted. If omitted, original names are used.
 
-=item C<on>
+=head2 C<on>
 
 Mandatory. Specify a target module. C<on> keyword can be ommited if this is the last option.
 
-=item C<use_ppi>
+=head2 C<use_ppi>
 
 If true, L<PPI> is used for replacement by C<as>. If PPI is available, defaults to true. Otherwise false.
 
-=back
+=head2 Others
+
+Rest of the options are passed to C<import> of filtered module.
 
 =head1 CAVEATS
 
@@ -285,7 +293,9 @@ L<Filter::Simple> - Helper module to implement source filter
 
 Yasutaka ATARASHI <yakex@cpan.org>
 
-=head1 LICENSE
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2012 by Yasutaka ATARASHI.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

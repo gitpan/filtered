@@ -13,6 +13,11 @@ sub call
 
 sub ppi_check
 {
+    return 'Dummy::FilterTest::Module';
+}
+
+sub ppi_check_old
+{
     return 'FilterTest::Module';
 }
 

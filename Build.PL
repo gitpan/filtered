@@ -19,14 +19,17 @@ my %module_build_args = (
     "Yasutaka ATARASHI <yakex\@cpan.org>"
   ],
   "dist_name" => "filtered",
-  "dist_version" => "v0.0.5",
+  "dist_version" => "v0.0.6",
   "license" => "perl",
   "module_name" => "filtered",
   "recommends" => {
+    "Filter::tee" => 0,
     "PPI" => 0
   },
   "recursive_test_files" => 1,
-  "requires" => {},
+  "requires" => {
+    "perl" => "5.006"
+  },
   "script_files" => []
 );
 

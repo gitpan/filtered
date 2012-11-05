@@ -1,14 +1,26 @@
 use strict;
 use warnings;
 
+my $pkg2file = sub {
+	my ($pkg) = shift;
+	$pkg =~ s@::@/@g;
+	$pkg .= '.pm';
+	return $pkg;
+};
+
 package filtered; # for Pod::Weaver
 
 # ABSTRACT: Apply source filter on external module
-our $VERSION = 'v0.0.5'; # VERSION
+our $VERSION = 'v0.0.6'; # VERSION
 
 package filtered::hook; ## no critic (RequireFilenameMatchesPackage)
 
-our $VERSION = 'v0.0.5'; # VERSION
+our $VERSION = 'v0.0.6'; # VERSION
+
+use File::Path;
+use File::Basename;
+
+my %MYINC;
 
 sub new
 {
@@ -22,12 +34,13 @@ sub new
 # NOTE: To store data in object is probably not good idea because this prohibits re-entrance.
 sub init
 {
-	my ($self, $target, $as, $with, $ppi) = @_;
+	my ($self, $target, $as, $with, $ppi, $prev) = @_;
 
 	$self->{_TARGET} = $target;
 	$self->{_AS} = $as;
 	$self->{_WITH} = $with;
 	$self->{_PPI} = $ppi;
+	$self->{_PREV} = $prev;
 	return $self;
 }
 
@@ -37,8 +50,7 @@ sub _filter_by_ppi
 
 	require PPI::Transform::PackageName;
 	my $trans = PPI::Transform::PackageName->new(
-		-package_name => sub { s/\b$self->{_TARGET}/$self->{_AS}/ },
-		-word         => sub { s/\b$self->{_TARGET}\b/$self->{_AS}/ },
+		-all => sub { s/^$self->{_TARGET}\b/$self->{_AS}/ }
 	);
 	$trans->apply($ref);
 }
@@ -46,24 +58,30 @@ sub _filter_by_ppi
 sub filtered::hook::INC
 {
 	my ($self, $filename) = @_;
+	if($pkg2file->($self->{_TARGET}) ne $filename) {
+		warn "Unexpected loading of $filename against $self->{_TARGET}";
+		return;
+	}
+
 	$self->{_FILENAME} = $filename;
 	shift @INC; # TODO: Gain robustness # NOTE: Just one time application
 
 #print "SELF: $self / FILTER: $self->{_FILTER} / AS: $self->{_AS} / FILENAME: $filename\n";
 
 # NOTE: The following part is based on perldoc -f require
-	if (exists $INC{$self}{$filename}) {
+	if (exists $MYINC{$self}{$filename}) {
 		# return 1 in original require
 		return (sub {
 			if($_[1]) {
 				delete $INC{$filename};
+				$INC{$filename} = $self->{_PREV}[1] if($self->{_PREV}[0]);
 				$_ = "1;\n";
 				$_[1] = 0;
 				return 1;
 			} else {
 				return 0;
 			}
-		}, 1) if $INC{$self}{$filename};
+		}, 1) if $MYINC{$self}{$filename};
 		die "Compilation failed in require";
 	}
 	my ($realfilename,$result);
@@ -71,7 +89,7 @@ sub filtered::hook::INC
 		foreach my $prefix (@INC) {
 			$realfilename = "$prefix/$filename";
 			if (-f $realfilename) {
-				$INC{$self}{$filename} = $realfilename;
+				$MYINC{$self}{$filename} = $realfilename;
 				last ITER;
 			}
 		}
@@ -97,11 +115,25 @@ sub filtered::hook::INC
 		my ($sub, $state) = @_;
 		if($state == 1) { # Inject filter at the beginning
 			delete $INC{$filename};
+			$INC{$filename} = $self->{_PREV}[1] if($self->{_PREV}[0]);
+			$_ = 'use '.$self->{_FILTER};
 			if(defined $self->{_WITH}) {
-				$_ = 'use '.$self->{_FILTER}.' '.$self->{_WITH}.";\n";
-			} else {
-				$_ = 'use '.$self->{_FILTER}.";\n";
+				$_ .= ' '.$self->{_WITH};
 			}
+			if(exists $ENV{FILTERED_ROOT}) {
+				my $asfile;
+				if(defined($self->{_AS})) {
+					$asfile = $self->{_AS};
+					$asfile =~ s@::@/@g;
+					$asfile .= '.pm';
+				} else {
+					$asfile = $filename;
+				}
+				my $dir = dirname($ENV{FILTERED_ROOT}.'/'.$asfile);
+				File::Path::make_path($dir) if ! -d $dir;
+				$_ .= "; use Filter::tee '".$ENV{FILTERED_ROOT}.'/'.$asfile."'";
+			}
+			$_ .= ";\n";
 			$_[1] = 0;
 		} elsif(eof($fh)) {
 			close $fh;
@@ -157,9 +189,12 @@ sub import
 	croak '`by\' must be specified' if ! defined($filter);
 	croak '`on\' or target name must be specified' if ! defined($target);
 	$hook{$filter} = filtered::hook->new(FILTER => $filter) if ! exists $hook{$filter};
-	unshift @INC, 	$hook{$filter}->init($target, $as, $with, $ppi);
+	my $prev = [exists($INC{$pkg2file->($target)}), (exists($INC{$pkg2file->($target)}) ? $INC{$pkg2file->($target)} : '')];
+	unshift @INC, $hook{$filter}->init($target, $as, $with, $ppi, $prev);
+	delete $INC{$pkg2file->($target)};
 	if(!defined eval "require $target") {
 		delete $INC{$hook{$filter}{_FILENAME}}; # For error in internal require;
+		$INC{$hook{$filter}{_FILENAME}} = $prev->[1] if $prev->[0];
 		croak "Can't load $target by $@";
 	}
 	if(defined $as) {
@@ -191,7 +226,7 @@ filtered - Apply source filter on external module
 
 =head1 VERSION
 
-version v0.0.5
+version v0.0.6
 
 =head1 SYNOPSIS
 
@@ -249,6 +284,11 @@ If true, L<PPI> is used for replacement by C<as>. If PPI is available, defaults 
 
 Rest of the options are passed to C<import> of filtered module.
 
+=head1 DEBUG
+
+If environment variable C<FILTERED_ROOT> is specified, filtered results are stored under the directory.
+Assuming the filtered module name is C<Filtered::Target>, the filtered result is stored as C<FILTERED_ROOT/Filtered/Target.pm>.
+
 =head1 CAVEATS
 
 =over 4
@@ -264,14 +304,16 @@ If you specified C<as =E<gt> FilteredTarget, on =E<gt> Target>, the following co
   package Target::work;
   package Target;
   Target::work::call();
+  extends 'Target::work';
 
 are transformed into as follows:
 
   package FilteredTarget::work;
   package FilteredTarget;
   FilteredTarget::work::call();
+  extends 'FilteredTarget::work';
 
-Actually, only C<'\bpackage\s+Target\b'> and C<'\bTarget::\b'> are replaced if C<use_ppi> is false. C<'\bTarget\b'> in arguments of C<package> statements and bare words are replaced if C<use_ppi> is true.
+Actually, only C<'\bpackage\s+Target\b'> and C<'\bTarget::\b'> are replaced if C<use_ppi> is false. C<'^Target\b'> in bare words and quotes are replaced if C<use_ppi> is true.
 
 =back
 

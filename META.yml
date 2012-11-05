@@ -16,5 +16,8 @@ meta-spec:
   version: 1.4
 name: filtered
 recommends:
+  Filter::tee: 0
   PPI: 0
-version: v0.0.5
+requires:
+  perl: 5.006
+version: v0.0.6

@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 25;
 use Test::Exception;
 
 use FindBin;
@@ -21,32 +21,41 @@ BEGIN {
 }
 
 BEGIN { use_ok('filtered', by => 'MyFilter', as => 'FilteredTest', on => 'FilterTest', @arg); }
+BEGIN { use_ok('FilterTest'); }
 
 # Duplicated use should have no effect
 BEGIN { use_ok('filtered', by => 'MyFilter', as => 'FilteredTest', on => 'FilterTest', @arg); }
+BEGIN { use_ok('FilterTest'); }
 
 # Duplicated use should have no effect
 BEGIN { use_ok('filtered', by => 'MyFilter', as => 'FilteredTest', @arg, 'FilterTest'); }
+BEGIN { use_ok('FilterTest'); }
 
 BEGIN { throws_ok { die $@ if ! defined eval "use filtered by => 'MyFilter'$arg, 'NotExistentFilterTest'"; } qr/Can't find .* in \@INC/, 'Not-existent module' }
+BEGIN { throws_ok { eval 'use NotExistentFilterTest'; } qr/^$/, 'Not-existent module' }
 
 BEGIN { throws_ok { die $@ if ! defined eval "use filtered by => 'NotExistentMyFilter'$arg, 'FilterTest'"; } qr/Can't load /, 'Not-existent filter' }
 
 # Different filter should be available
 BEGIN { use_ok('filtered', by => 'MyFilter2', as => 'FilteredTest2', on => 'FilterTest', @arg); }
+BEGIN { use_ok('FilterTest'); }
 
 # Different target should be available
 BEGIN { use_ok('filtered', by => 'MyFilter2', as => 'FilteredTest3', on => 'FilterTest2', @arg); }
+BEGIN { use_ok('FilterTest2'); }
 
 # Different target should be available
 BEGIN { use_ok('filtered', by => 'MyFilter2', @arg, 'Test::Test::FilterTest3'); }
 
 BEGIN { use_ok('filtered', by => 'MyFilter3', as => 'FilteredTest4', with => 'sub { s/FOO/BAR/g }', on => 'FilterTest', @arg); }
+BEGIN { use_ok('FilterTest'); }
 
+is(FilterTest::call(), 'FOOFOOFOO');
 is(FilteredTest::call(), 'BARBARBAR');
 is(FilteredTest::ppi_check(), $USE_PPI ? 'Dummy::FilterTest::Module' : 'Dummy::FilteredTest::Module');
 is(FilteredTest::ppi_check_old(), 'FilteredTest::Module');
 is(FilteredTest2::call(), 'BARFOO');
+is(FilterTest2::call(), 'FOOFOOFOOFOO');
 is(FilteredTest3::call(), 'BARBAR');
 is(Test::Test::FilterTest3::call(), 'BARZOTZOT');
 is(FilteredTest4::call(), 'BARBARBAR');

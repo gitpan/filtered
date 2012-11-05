@@ -8,4 +8,4 @@ use FindBin;
 use lib $FindBin::Bin;
 
 $ENV{FILTERED_TEST_TYPE} = 1; # use_ppi => 1
-do 'import.pl';
+do 'filtered_after_orig.pl';

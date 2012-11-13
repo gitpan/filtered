@@ -4,7 +4,7 @@ use warnings;
 package PPI::Transform::PackageName;
 
 # ABSTRACT: Subclass of PPI::Transform specific for modifying package names
-our $VERSION = 'v0.0.6'; # VERSION
+our $VERSION = 'v0.0.7'; # VERSION
 
 use base qw(PPI::Transform);
 
@@ -78,7 +78,7 @@ PPI::Transform::PackageName - Subclass of PPI::Transform specific for modifying 
 
 =head1 VERSION
 
-version v0.0.6
+version v0.0.7
 
 =head1 SYNOPSIS
 

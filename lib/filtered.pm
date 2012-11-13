@@ -11,11 +11,11 @@ my $pkg2file = sub {
 package filtered; # for Pod::Weaver
 
 # ABSTRACT: Apply source filter on external module
-our $VERSION = 'v0.0.6'; # VERSION
+our $VERSION = 'v0.0.7'; # VERSION
 
 package filtered::hook; ## no critic (RequireFilenameMatchesPackage)
 
-our $VERSION = 'v0.0.6'; # VERSION
+our $VERSION = 'v0.0.7'; # VERSION
 
 use File::Path;
 use File::Basename;
@@ -121,17 +121,21 @@ sub filtered::hook::INC
 				$_ .= ' '.$self->{_WITH};
 			}
 			if(exists $ENV{FILTERED_ROOT}) {
-				my $asfile;
-				if(defined($self->{_AS})) {
-					$asfile = $self->{_AS};
-					$asfile =~ s@::@/@g;
-					$asfile .= '.pm';
+				if(eval { require Filter::tee; }) {
+					my $asfile;
+					if(defined($self->{_AS})) {
+						$asfile = $self->{_AS};
+						$asfile =~ s@::@/@g;
+						$asfile .= '.pm';
+					} else {
+						$asfile = $filename;
+					}
+					my $dir = dirname($ENV{FILTERED_ROOT}.'/'.$asfile);
+					File::Path::make_path($dir) if ! -d $dir;
+					$_ .= "; use Filter::tee '".$ENV{FILTERED_ROOT}.'/'.$asfile."'";
 				} else {
-					$asfile = $filename;
+					warn 'Ignore environment variable FILTERED_ROOT because Filter::tee is not available';
 				}
-				my $dir = dirname($ENV{FILTERED_ROOT}.'/'.$asfile);
-				File::Path::make_path($dir) if ! -d $dir;
-				$_ .= "; use Filter::tee '".$ENV{FILTERED_ROOT}.'/'.$asfile."'";
 			}
 			$_ .= ";\n";
 			$_[1] = 0;
@@ -226,7 +230,7 @@ filtered - Apply source filter on external module
 
 =head1 VERSION
 
-version v0.0.6
+version v0.0.7
 
 =head1 SYNOPSIS
 
@@ -286,7 +290,7 @@ Rest of the options are passed to C<import> of filtered module.
 
 =head1 DEBUG
 
-If environment variable C<FILTERED_ROOT> is specified, filtered results are stored under the directory.
+If L<Filter::tee> is available and environment variable C<FILTERED_ROOT> is specified, filtered results are stored under the directory.
 Assuming the filtered module name is C<Filtered::Target>, the filtered result is stored as C<FILTERED_ROOT/Filtered/Target.pm>.
 
 =head1 CAVEATS
